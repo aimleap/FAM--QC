@@ -1,0 +1,11 @@
+Code review checklist
+  - timestamp shold be unix format (eg: 1747622827)
+  - source has key description and description has value 'News' or 'news' 
+    - date should be in (MM/DD/YYYY) format
+    - backfilledminutes should be 30
+  - post array should have a key ingestpurpose
+  - post array should have a key parser_type
+  - if threadhandler function is declared then
+      - thread array should have title,link,timestamp and parser
+  - backfilledminutes should be 1440 or 30
+  
