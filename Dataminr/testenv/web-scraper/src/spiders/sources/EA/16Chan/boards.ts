@@ -1,0 +1,15 @@
+export const boards = [
+  '/pol/',
+  '/facist/',
+  '/ausneets/',
+  '/b/',
+  '/g/',
+  '/meta/',
+  '/r9k/',
+  '/culture/',
+  '/v/',
+  '/library/',
+  '/k/',
+  '/200acres/',
+  '/mde/',
+];

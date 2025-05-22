@@ -1,0 +1,7 @@
+.eslint*
+.prettierrc
+config/default.json
+coverage
+default.json
+nodemon.json
+rundeck

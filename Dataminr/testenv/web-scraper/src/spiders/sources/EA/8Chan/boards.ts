@@ -1,0 +1,17 @@
+export const boards = [
+  '/b/',
+  '/pol/',
+  '/monarchy/',
+  '/t/',
+  '/liberty/',
+  '/tv/',
+  '/x/',
+  '/leftpol23/',
+  '/k/',
+  '/fascist/',
+  'islam/',
+  '/pol2/',
+  '/leftpol/',
+  '/christian/',
+  '/leftypol/',
+];

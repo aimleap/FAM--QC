@@ -1,0 +1,2 @@
+{% set role = aws_tags.Role -%}
+{{ s3.application[role].config.config |tojson(2) }}

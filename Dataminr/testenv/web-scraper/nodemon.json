@@ -1,0 +1,11 @@
+{
+  "restartable": "rs",
+  "ignore": [
+    "src/*",
+    "node_modules/*",
+    "apify_storage/*",
+    "config/keeper.json",
+    "tmp/*",
+    "output.json"
+  ]
+}

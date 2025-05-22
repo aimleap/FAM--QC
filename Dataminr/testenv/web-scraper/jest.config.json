@@ -1,0 +1,6 @@
+{
+  "setupFilesAfterEnv": [
+    "./jest.setup.redis-mock.js"
+  ],
+  "collectCoverage": true
+}

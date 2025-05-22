@@ -1,0 +1,76 @@
+import cheerio from 'cheerio';
+import { Page } from 'puppeteer';
+import { SourceType, SourceTypeEnum } from '../../../../lib/parserUtil';
+import Post from '../../../../schema/post';
+import { PARSER_TYPE } from '../../../../constants/parserType';
+import PuppeteerParserStealth from '../../../parsers/PuppeteerParserStealth';
+
+export const source: SourceType = {
+  description: 'Forums',
+  isCloudFlare: true,
+  name: 'Dark2Web Market',
+  type: SourceTypeEnum.FORUM,
+  url: 'http://dark2webklvrieo4sg2olixbnod66tvirpec7hxjnkmxbcrtd2jipkad.onion/',
+};
+
+async function navigateToPage(page: Page) {
+  try {
+    await page.waitForSelector('input[value="I Am Not a Robot"]');
+    await page.click('input[value="I Am Not a Robot"]');
+  } finally {
+    await page.waitForSelector('li[data-date]');
+  }
+}
+
+async function parsePage(page: Page): Promise<CheerioSelector | null> {
+  const content = await page.content();
+  return cheerio.load(content);
+}
+
+async function postHandler(page: Page): Promise<Post[]> {
+  const posts: Post[] = [];
+  await navigateToPage(page);
+  const $ = await parsePage(page);
+  if ($ === null) return [];
+  const entrySelector = $('li[data-date]').get();
+  entrySelector.forEach((el) => {
+    const title = $(el).find('div[class="structItem-cell structItem-cell--title"] a').text().trim();
+    const link = `http://dark2webklvrieo4sg2olixbnod66tvirpec7hxjnkmxbcrtd2jipkad.onion${$(el)
+      .find('div[class="structItem-cell structItem-cell--title"] a')
+      .attr('href')}`;
+    const username = $(el).find('a[class="username "] span').text().trim();
+    const timestamp = Number($(el).find('time').attr('data-time'));
+    posts.push(
+      new Post(
+        title,
+        {
+          current_url: link,
+        },
+        timestamp,
+        [],
+        [],
+        new Map(
+          Object.entries({
+            entity: title,
+            title,
+            username,
+            ingestpurpose: 'darkweb',
+            parser_type: PARSER_TYPE.AIMLEAP_PARSER,
+          }),
+        ),
+      ),
+    );
+  });
+  return posts;
+}
+export const parser = new PuppeteerParserStealth(
+  source,
+  [
+    {
+      name: 'post',
+      // @ts-ignore
+      parser: postHandler,
+    },
+  ],
+  1440,
+);

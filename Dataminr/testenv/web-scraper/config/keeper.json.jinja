@@ -1,0 +1,5 @@
+{% set role = aws_tags.Role -%}
+{
+  "user": "{{ s3.application[role].config.config.keeper.username }}",
+  "password": "{{ s3.application[role].config.config.keeper.password }}"
+}

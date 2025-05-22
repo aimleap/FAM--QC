@@ -1,0 +1,97 @@
+image: docker-reg.dataminr.com/dark-web/ci-ubuntu:032123
+
+variables:
+  BUILD_TAG: "${CI_COMMIT_SHORT_SHA}"
+  TEAM_NAME: "dark-web"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+
+stages:
+  - dependency
+  - validation
+  - integration
+  - build
+  - deployment
+
+before_script:
+  - eval $(ssh-agent -s)
+  - echo "$TEAM_X_DEPLOY_KEY" > /tmp/id_rsa
+  - chmod 0600 /tmp/id_rsa
+  - export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /tmp/id_rsa"
+after_script:
+  - rm -f /tmp/id_rsa
+
+dependency:
+  stage: dependency
+  script:
+    - node -v
+    - npm -v
+    - npm install
+  artifacts:
+    paths:
+      - ./node_modules
+      - package-lock.json
+
+eslint:
+  stage: validation
+  script:
+    - npm run eslint
+
+typescript:
+  stage: validation
+  script:
+    - npm run check-types
+
+unit-test:
+  stage: validation
+  script:
+    - npm run unit-test
+
+integration:
+  stage: integration
+  script:
+    - npm run build
+    - echo "Integration Testing parsers"
+    # - ./bin/integrate.sh
+  artifacts:
+    paths:
+      - dist
+
+build:
+  stage: build
+  only:
+    - master
+  script:
+    - TAG=$(jq -r .version package.json)
+    - REPO=$(jq -r .repository.url package.json)
+
+    - git config user.email $TEAM_X_EMAIL
+    - git config user.name $TEAM_X_NAME
+
+    - git tag -a $TAG -m "created by $TEAM_X_EMAIL in ci"
+    - git push $REPO $TAG
+
+bump-version:
+  except:
+    - master
+  stage: build
+  when: manual
+  script:
+    - >
+      SCRAPER_LITE_GITLAB_TOKEN=${SCRAPER_LITE_GITLAB_TOKEN}
+      TEAM_X_EMAIL=${TEAM_X_EMAIL}
+      TEAM_X_NAME=${TEAM_X_NAME}
+      ./bin/updateTag.sh
+
+after-merge:
+  only:
+    - master
+  stage: deployment
+  script:
+    - >
+      WEB_SCRAPER_GITLAB_TOKEN=${WEB_SCRAPER_GITLAB_TOKEN}
+      TEAM_X_EMAIL=${TEAM_X_EMAIL}
+      TEAM_X_NAME=${TEAM_X_NAME}
+      ./bin/updateLib.sh
+

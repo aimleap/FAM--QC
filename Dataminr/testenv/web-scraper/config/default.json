@@ -1,0 +1,85 @@
+{
+  "proxy": {
+    "control_port": 7001,
+    "host": "127.0.0.1",
+    "password": "z3yqX10v",
+    "sock_port": 7000
+  },
+  "sns": {
+    "url": "http://127.0.0.1:4566",
+    "region": "us-east-1",
+    "topics": [
+      "team_x_ea-content-create"
+    ]
+  },
+  "gitlab": {
+    "api_key": "",
+    "url": "https://git.dataminr.com",
+    "project_id": 1071,
+    "env": "stage"
+  },
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379
+  },
+  "influx_db": {
+    "database": "telegraf",
+    "host": "127.0.0.1",
+    "name": "web-scraper",
+    "password": "root",
+    "port": 8086,
+    "username": "root"
+  },
+  "api": {
+    "dataminr_api": "https://api-stage.dataminr.com",
+    "dataminr_internal_api": "https://api.dm.vpc",
+    "middleware": [
+      {
+        "api_key": "<API_KEY>",
+        "api_secret": "<API_SECRET>"
+      }
+    ],
+    "restart": {
+      "api_key": "<RESTART_API_KEY>"
+    },
+    "ingest_config": {
+      "api_key": "<INGEST_API_KEY>",
+      "api_secret": "<INGEST_API_SECRET>"
+    },
+    "media_request_api": {
+      "api_key": "<MEDIA_REQ_API_KEY>",
+      "api_secret": "<MEDIA_REQ_API_SECRET>"
+    },
+    "source_channel": {
+      "api_key": "<SOURCE_CHANNEL_API_KEY>",
+      "api_secret": "<SOURCE_CHANNEL_API_SECRET>"
+    },
+    "whisper": {
+      "api_key": "<HEADER>",
+      "api_secret": "<SECRET>"
+    },
+    "evidence_search": {
+      "api_key": "<API_KEY>",
+      "api_secret": "<API_SECRET>"
+    }
+  },
+  "cdn": {
+    "critical_mention": {
+      "s3_bucket": "newtestbucket",
+      "url_signer_path": "https://alertmedia.dataminr.com/stage/cm",
+      "local_s3_endpoint": "http://127.0.0.1:4566",
+      "path": "stage/cm"
+    }
+  },
+  "kinesis": {
+    "region": "us-east-1",
+    "stream_name": "team-x-archiver",
+    "partition_key": "scraper",
+    "url": "http://127.0.0.1:4566"
+  },
+  "archiver": {
+    "s3_bucket": "com.dataminr.team-x",
+    "local_s3_endpoint": "http://127.0.0.1:4566",
+    "path": "DIP/test"
+  }
+}

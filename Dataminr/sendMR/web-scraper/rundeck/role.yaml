@@ -1,0 +1,52 @@
+team: darkweb
+role: web-scraper
+owner: TX
+git_repo: web-crawling/web-scraper
+health_check:
+  path: /healthcheck
+  protocol: HTTP
+  port: 3000
+  interval: 30
+  timeout: 20
+  unhealthy_threshold: 3
+  start_period: 300
+routing:
+  service_port: 3000
+  service_protocol: HTTP
+  sticky_sessions: 'false'
+  routes:
+    web-scraper:
+      int:
+        - /
+Elasticache:
+  type: redis
+  Name: darkweb-services
+container:
+  service:
+    placementConstraints:
+      - type: distinctInstance
+  task:
+    network_mode: host
+    image: dark-web/web-scraper
+    ports:
+      - containerPort: 3000
+        protocol: tcp
+Kinesis:
+  - StreamName: team-x-archiver
+    ShardCount: 30
+    type: Producer
+    Firehose:
+      BucketName: com.dataminr.team-x
+      Prefix: generic-archiver/test/
+      CompressionFormat: GZIP
+      BufferingHints:
+        SizeInMBs: 5
+        IntervalInSeconds: 300
+      CloudWatchLoggingOptions:
+        Enabled: True
+        LogGroupName: team-x
+        LogStreamName: generic-archiver
+IAM:
+  darkweb_vpc_policy: {}
+  s3_alertmedia-cdn_rw: {}
+  team_x_s3_rw_access: {}

@@ -1,0 +1,15 @@
+launch_config:
+  instance_type: c7a.xlarge
+  key_name: ops
+  storage:
+    - name: /dev/sda1
+      size: 30
+      type: gp2
+as_group:
+  min_hosts: 20
+  max_hosts: 20
+service:
+  desired_instances: 20
+  min_allowed_percent: 50
+  max_allowed_percent: 125
+ami_updates: {}

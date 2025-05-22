@@ -1,0 +1,79 @@
+image: docker-reg.dataminr.com/dark-web/ci-ubuntu:0606241935
+
+variables:
+  BUILD_TAG: "${CI_COMMIT_SHORT_SHA}"
+  CONFIG_TAG: "1.0.1"
+  ENVIRONMENT_PROD_URL: "https://web-scraper.dataminr.com"
+  ENVIRONMENT_STAGE_URL: "https://web-scraper-test.dataminr.com"
+  PROD_AUTO_SCALE_FILE: "rundeck/autoscaling_prod.yaml"
+  PROD_ROLE_FILE: "rundeck/role_prod.yaml"
+  STAGE_AUTO_SCALE_FILE: "rundeck/autoscaling.yaml"
+  STAGE_ROLE_FILE: "rundeck/role.yaml"
+  TEAM_NAME: "dark-web"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+
+stages:
+  - dependency
+  - validation
+  - integration
+  - build
+  - deployment
+
+include:
+  - project: 'web-crawling/ci-cd-template'
+    ref: '2.0.2'
+    file: '/templates/deployment.yml'
+
+dependency:
+  stage: dependency
+  script:
+    - node -v
+    - npm -v
+    - npm install
+  artifacts:
+    paths:
+      - ./node_modules
+
+eslint:
+  stage: validation
+  script:
+    - npm run eslint
+
+typescript:
+  stage: validation
+  script:
+    - npm run check-types
+
+test:
+  stage: validation
+  script:
+    - npm test
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+
+integration:
+  stage: integration
+  script:
+    - npm run babel:build
+    - docker build .
+  artifacts:
+    paths:
+      - dist
+  only:
+    - master
+
+integration-build:
+  stage: build
+  script:
+    - npm run babel:build
+    - docker build .
+    - docker-cli build --team "${TEAM_NAME}" --role "${RUNDECK_ROLE_NAME}" --commit-hash "${BUILD_TAG}"
+  artifacts:
+    paths:
+      - dist
+  when: manual
+  only:
+    - branches
+  except:
+    - master
