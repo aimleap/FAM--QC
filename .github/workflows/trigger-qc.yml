@@ -1,0 +1,96 @@
+name: Trigger QC Test Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  trigger-formatted-output:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout the PR code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Fetch base commit
+      run: git fetch origin ${{ github.event.pull_request.base.sha }}
+
+    - name: Get list of changed files
+      id: changed_files
+      run: |
+        CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E "\.py$" | tr '\n' ',')
+        echo "Changed files: $CHANGED_FILES"
+
+        if [ -n "$CHANGED_FILES" ]; then
+          CHANGED_FILES=$(echo "$CHANGED_FILES" | sed 's/,$//')
+        fi
+
+        echo "files=$CHANGED_FILES" >> "$GITHUB_ENV"
+
+    - name: Get checklist file
+      id: checklist_file
+      run: |
+        if [ -f "./checklist" ]; then
+          echo "checklist_file=$checklist" >> "$GITHUB_ENV"
+          echo "Found checklist file in root directory : $checklist"
+        else
+          echo "checklist_file=" >> "$GITHUB_ENV"
+          echo "No checklist found in root directory"
+        fi
+
+    - name: Get prompt file
+      id: prompt_file
+      run: |
+        if [ -f "./prompt" ]; then
+          echo "prompt_file=$prompt" >> "$GITHUB_ENV"
+          echo "Found prompt file in root directory : $prompt"
+        else
+          echo "prompt_file=" >> "$GITHUB_ENV"
+          echo "No prompt found in root directory"
+        fi
+
+    - name: Trigger Formatted QC Workflow
+      run: |
+        curl -X POST -H "Accept: application/vnd.github.everest-preview+json" \
+             -H "Authorization: token ${{ secrets.TRIGGER_TOKEN }}" \
+             https://api.github.com/repos/aimleap/qc-ai/dispatches \
+             -d '{
+               "event_type": "trigger-qc-test",
+               "client_payload": {
+                 "repo_to_test": "${{ github.repository }}",
+                 "branch": "${{ github.event.pull_request.head.ref }}",
+                 "code_file": "${{ env.files }}",
+                 "prompt_file": "${{ env.checklist_file }}",
+                 "checklist_file": "${{ env.prompt_file }}"
+               }
+             }'
+
+    - name: Waiting for QC Test to Complete
+      id: wait_for_qc_test
+      env:
+        GH_TOKEN: ${{ secrets.TRIGGER_TOKEN }}
+      run: |
+        echo "Waiting for 'QC Test' workflow to complete..."
+        sleep 15s
+        CHECK_NAME="Formatted Output"
+        REPO="aimleap/qc-ai"
+        RUN_ID=$(gh run list --repo "$REPO" --json databaseId --workflow="$CHECK_NAME" --branch "main" --jq '.[0].databaseId')
+        if [ -z "$RUN_ID" ]; then
+          echo "No 'QC Test' workflow found in the repository."
+          exit 1
+        fi
+        STATUS=""
+        while [ "$STATUS" != "completed" ]; do
+          sleep 10
+          STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status --jq '.status')
+          echo "Current status: $STATUS"
+        done
+        CONCLUSION=$(gh run view "$RUN_ID" --repo "$REPO" --json conclusion --jq '.conclusion')
+        if [ "$CONCLUSION" != "success" ]; then
+          echo "'QC Test' workflow failed or was cancelled. Stopping this workflow."
+          exit 1
+        fi
+        echo "'QC Test' workflow completed successfully."
