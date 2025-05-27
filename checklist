@@ -1,11 +1,85 @@
-Code review checklist
-  - timestamp shold be unix format (eg: 1747622827)
-  - source has key description and description has value 'News' or 'news' 
-    - date should be in (MM/DD/YYYY) format
-    - backfilledminutes should be 30
-  - post array should have a key ingestpurpose
-  - post array should have a key parser_type
-  - if threadhandler function is declared then
-      - thread array should have title,link,timestamp and parser
-  - backfilledminutes should be 1440 or 30
-  
+ Code Review Checklist for Data Parsers
+🔹 1. Timestamp Format Validation
+Requirement: All timestamps must be in Unix format (e.g., 1747622827).
+
+Why: Ensures consistency and simplifies time-based calculations, storage, and querying.
+
+Action: Look for any timestamp fields (e.g., in Post or thread) and confirm they are stored as Unix integers, not human-readable formats like YYYY-MM-DD.
+
+🔹 2. Source Metadata Checks
+Requirement: The source object should include a key description, and its value must be 'News' or 'news'.
+
+Why: This validates that the parser is categorized correctly.
+
+Action: Inspect the source definition and confirm:
+
+ts
+Copy
+Edit
+description: 'News' // or 'news'
+🔹 3. Date Formatting Inside Post Metadata
+Requirement: If a date key is used in post metadata, it must be in the MM/DD/YYYY format.
+
+Why: This standardizes date readability across systems.
+
+Action: Check for any keys like date, and verify values follow this pattern (e.g., 05/27/2025).
+
+🔹 4. Backfilled Minutes Setting
+Requirement: backfilledminutes should be either 30 or 1440.
+
+Why: Ensures predictable time windows for backfilling historical data.
+
+Action: Look at the parser instantiation:
+
+ts
+Copy
+Edit
+new AuthParser(source, [...], backfilledminutes);
+Confirm backfilledminutes is 30 or 1440 only.
+
+🔹 5. Required Post Metadata Keys
+Requirement: Each post object must contain:
+
+A key named ingestpurpose
+
+A key named parser_type
+
+Why: These keys identify the origin and type of parsing, critical for downstream pipelines.
+
+Action: In the Post constructor, verify:
+
+ts
+Copy
+Edit
+new Map(Object.entries({
+  ingestpurpose: '...',
+  parser_type: ...,
+  ...
+}))
+🔹 6. Thread Handler Validation (If Present)
+Condition: If the code declares a threadHandler function, then:
+
+Each thread object returned should have the following keys:
+
+title
+
+link
+
+timestamp (Unix format)
+
+parser
+
+Why: Standardizes structure for threaded content.
+
+Action: Locate the threadHandler function (if defined) and verify the structure of thread items matches the required keys and format.
+
+🔹 7. General Consistency Checks
+Ensure:
+
+No leftover debug prints or comments.
+
+Consistent formatting (indentation, brackets, etc.).
+
+Use of constants (e.g., PARSER_TYPE) for standardization.
+
+No hardcoded magic strings unless clearly justified.
