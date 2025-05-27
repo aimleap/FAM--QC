@@ -24,7 +24,7 @@ async function postHandler($: CheerioSelector, elements: CheerioElement[]): Prom
     const walletType = $(el).find('td:nth-child(3)').text().trim();
     const Balance = $(el).find('td:nth-child(4)').text().trim();
     const Price = $(el).find('td:nth-child(5)').text().trim();
-    const timestamp = moment().unix();
+    const timestamp = moment().format("YYYY-MM-DD");
     const text = `${walletType}\n${Price}\n${Availability}`;
     items.push(
       new Post(
